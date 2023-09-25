@@ -4,7 +4,7 @@ import class_post
 import time
 import my_parsing
 
-token = '6329148877:AAFC-4Z2Ju-n4go8N9tQG-Gbxm2hgvSgn_o'
+token = ''
 bot = telebot.TeleBot(token)
 develop_source = 'https://habr.com/ru/flows/develop/news/'
 admin_source = 'https://habr.com/ru/flows/admin/news/'
