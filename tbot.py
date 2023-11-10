@@ -1,9 +1,10 @@
 import telebot
 from telebot import types
-import class_post
+import post
 import time
-import my_parsing
+import parsing
 
+# Ссылки на источники
 token = ''
 bot = telebot.TeleBot(token)
 develop_source = 'https://habr.com/ru/flows/develop/news/'
@@ -15,6 +16,7 @@ popsci_source = 'https://habr.com/ru/flows/popsci/news/'
 all_source = 'https://habr.com/ru/news/'
 source = []
 
+## Начало работы бота
 @bot.message_handler(commands = ['start'])
 def start_message(message):
 	markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -47,11 +49,13 @@ def return_menu(message):
 	markup1.add(settings, auto_posting)
 	bot.send_message(message.chat.id,'выбери настройки бота или запусти авто-постинг', reply_markup = markup1)
 
+# Добавление в список источников по ключевому слову (Поиск по хабру) 
 @bot.message_handler(func=lambda message: message.text=='По ключевому слову')
 def personal(message):
 	msg = bot.send_message(message.chat.id, 'Введите ключевое слово')
 	bot.register_next_step_handler(msg, make_personal_url)
 
+# Функция для создания новой ссылки источника новостей
 def make_personal_url(words):
 	words_txt = words.text
 	words_txt = words_txt.split()
@@ -62,12 +66,10 @@ def make_personal_url(words):
 
 @bot.message_handler(func=lambda message: message.text=='Удалить источник')
 def delete_smt(message):
-	list_source = [class_post.Get_tag_from_url(url) for url in source]
+	list_source = [post.Get_tag_from_url(url) for url in source]
 	msg = bot.send_message(message.chat.id, f'Что удалить?\n{list_source}')
 	bot.register_next_step_handler(msg, del_from_source)
 
-# тут добавить обработку исключения на ввод слова, которого нет в списке
-# не удалить по ключу
 def del_from_source(message):
 	source.list.remove(message)
 
@@ -95,32 +97,32 @@ def market_app(message):
 def pop_app(message):
 	source.append(popsci_source)
 
+# Начало работы авто-постинга
 @bot.message_handler(func=lambda message: message.text=='Начать авто-постинг')
 def menu(message):
 	if len(source) == 0:
 		source.append(all_source)
-	#bot.send_message(message.chat.id, text=source)
 	first_posts = ["1" for i in range(len(source))]
 	for indx, url in enumerate(source):
-		post1 = class_post.Make_post(source[indx])
+		post1 = post.Make_post(source[indx])
 		first_posts[indx] = post1.link
-		bot.send_message(message.chat.id, text = f'Источник: {class_post.Get_tag_from_url(source[indx])}\n{post1}')
+		bot.send_message(message.chat.id, text = f'Источник: {post.Get_tag_from_url(source[indx])}\n{post1}')
 
 	while(True):
 		# НЕ ЗАБЫТЬ ПОМЕНЯТЬ НА ПОЛЧАСА
 		time.sleep(5)
 		for indx, url in enumerate(source):	
-			list_link = my_parsing.get_links_list(source[indx])
+			list_link = parsing.get_links_list(source[indx])
 			list_link.reverse()
-			if first_posts[indx] == class_post.Make_post(source[indx]).link:
-				bot.send_message(message.chat.id, text = f'{class_post.Get_tag_from_url(source[indx])}Новыx новостей нет')
+			if first_posts[indx] == post.Make_post(source[indx]).link:
+				bot.send_message(message.chat.id, text = f'{post.Get_tag_from_url(source[indx])}Новыx новостей нет')
 				continue
 
 			for index, linki in enumerate(list_link):
 				if list_link[index - 1] == first_posts[indx]:
-					post1 = class_post.Make_post_link(list_link[index])
-					first_posts[indx] = class_post.Make_post_link(list_link[index]).link
-					bot.send_message(message.chat.id, text = f'Источник: {class_post.Get_tag_from_url(source[indx])}\n{post1}')
+					post1 = post.Make_post_link(list_link[index])
+					first_posts[indx] = post.Make_post_link(list_link[index]).link
+					bot.send_message(message.chat.id, text = f'Источник: {post.Get_tag_from_url(source[indx])}\n{post1}')
 			
 bot.infinity_polling(timeout = 5, long_polling_timeout = 10)
 
